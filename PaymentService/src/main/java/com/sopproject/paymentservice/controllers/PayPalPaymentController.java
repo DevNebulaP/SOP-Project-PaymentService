@@ -8,9 +8,6 @@ import com.paypal.base.rest.PayPalRESTException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import static com.sopproject.paymentservice.services.PayPalPaymentService.CANCEL_URL;
-import static com.sopproject.paymentservice.services.PayPalPaymentService.SUCCESS_URL;
-
 @RestController
 public class PayPalPaymentController {
 
@@ -34,12 +31,12 @@ public class PayPalPaymentController {
         return "redirect:/";
     }
 
-    @RequestMapping(value = CANCEL_URL, method = RequestMethod.GET)
+    @RequestMapping(value = "/cancel", method = RequestMethod.GET)
     public String cancelPay() {
         return "cancel";
     }
 
-    @RequestMapping(value = SUCCESS_URL, method = RequestMethod.GET)
+    @RequestMapping(value = "/success", method = RequestMethod.GET)
     public String successPay(@RequestParam("paymentId") String paymentId, @RequestParam("PayerID") String payerId) {
         try {
             Payment payment = service.executePayment(paymentId, payerId);
