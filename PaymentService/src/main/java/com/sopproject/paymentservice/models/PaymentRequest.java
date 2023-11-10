@@ -7,9 +7,8 @@ import lombok.ToString;
 @Getter
 @ToString
 @Builder
-public class Order {
-    private double price;
-    private String currency;
+public class PaymentRequest {
     private String description;
     private String orderItem;
+    private String userId;
 }

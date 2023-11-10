@@ -1,17 +1,15 @@
 package com.sopproject.paymentservice.controllers;
 
-import com.sopproject.paymentservice.models.Order;
-import com.sopproject.paymentservice.models.OrderEntity;
-import com.sopproject.paymentservice.models.OrderRepository;
-import com.sopproject.paymentservice.models.OrderStatus;
+import com.sopproject.paymentservice.models.*;
 import com.sopproject.paymentservice.services.PayPalPaymentService;
 import com.paypal.api.payments.Links;
-import com.paypal.api.payments.Payment;
 import com.paypal.base.rest.PayPalRESTException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 @RestController
 public class PayPalPaymentController {
@@ -20,23 +18,29 @@ public class PayPalPaymentController {
     private PayPalPaymentService service;
 
     private final OrderRepository orderRepository;
+    private final PremiumUserRepository premiumUserRepository;
 
-    public PayPalPaymentController(OrderRepository orderRepository) {
+    public PayPalPaymentController(OrderRepository orderRepository, PremiumUserRepository premiumUserRepository) {
         this.orderRepository = orderRepository;
+        this.premiumUserRepository = premiumUserRepository;
     }
 
-    @RequestMapping(value = "/pay", method = RequestMethod.POST)
-    public String payment(@RequestBody Order order) {
+    @RequestMapping(value = "/payPremium", method = RequestMethod.POST)
+    public String payment(@RequestBody PaymentRequest paymentRequest) {
+        if(paymentRequest.getUserId() == null || paymentRequest.getOrderItem() == null){
+            throw new IllegalArgumentException("Bad request");
+        }
         try {
-            Payment payment = service.createPayment(order.getPrice(), order.getCurrency(), order.getDescription());
+            com.paypal.api.payments.Payment payment = service.createPayment(2.99, "USD", paymentRequest.getDescription());
             for(Links link:payment.getLinks()) {
                 if(link.getRel().equals("approval_url")) {
                     OrderEntity entity = new OrderEntity();
                     entity.setPayId(payment.getId());
-                    entity.setPrice(BigDecimal.valueOf(order.getPrice()));
-                    entity.setCurrency(order.getCurrency());
-                    entity.setOrderItem(order.getOrderItem());
+                    entity.setPrice(BigDecimal.valueOf(2.99));
+                    entity.setCurrency("USD");
+                    entity.setOrderItem(paymentRequest.getOrderItem());
                     entity.setOrderStatus(OrderStatus.CREATED);
+                    entity.setUserId(paymentRequest.getUserId());
                     orderRepository.save(entity);
                     return "redirect:"+link.getHref();
                 }
@@ -46,12 +50,12 @@ public class PayPalPaymentController {
 
             e.printStackTrace();
         }
-        return "redirect:/";
+        return "error";
     }
 
     @RequestMapping(value = "/cancel", method = RequestMethod.GET)
     public String cancelPay() {
-        return "cancel";
+        return "Payment Cancelled";
     }
 
     @RequestMapping(value = "/success", method = RequestMethod.GET)
@@ -61,15 +65,31 @@ public class PayPalPaymentController {
             if(entity == null) {
                 return "error: Order matching paymentId not found.";
             }
-            Payment payment = service.executePayment(paymentId, payerId);
+            com.paypal.api.payments.Payment payment = service.executePayment(paymentId, payerId);
             if (payment.getState().equals("approved")) {
                 entity.setOrderStatus(OrderStatus.PAID);
                 entity.setPayerId(payerId);
+                entity.setPaidDateTime(LocalDateTime.now());
                 orderRepository.save(entity);
+
+                PremiumUserEntity premiumUserEntity = premiumUserRepository.findByUserId(entity.getUserId());
+                if(premiumUserEntity == null){
+                    premiumUserEntity = new PremiumUserEntity();
+                    premiumUserEntity.setUserId(entity.getUserId());
+                    premiumUserEntity.setPremiumCoverage(LocalDateTime.now());
+                }
+                if(premiumUserEntity.getPremiumCoverage().isBefore(entity.getPaidDateTime())){
+                    premiumUserEntity.setPremiumCoverage(LocalDateTime.now().plusDays(30));
+                }
+                else{
+                    premiumUserEntity.setPremiumCoverage(premiumUserEntity.getPremiumCoverage().plusDays(30));
+                }
+                premiumUserRepository.save(premiumUserEntity);
+
                 return "success";
             }
         } catch (PayPalRESTException e) {
         }
-        return "redirect:/";
+        return "error";
     }
 }
