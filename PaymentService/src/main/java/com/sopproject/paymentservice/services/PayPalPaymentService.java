@@ -17,8 +17,8 @@ public class PayPalPaymentService {
     @Autowired
     private APIContext apiContext;
 
-    public static final String SUCCESS_URL = "http://127.0.0.1:8080/success";
-    public static final String CANCEL_URL = "http://127.0.0.1:8080/cancel";
+    public static final String SUCCESS_URL = "http://127.0.0.1/success";
+    public static final String CANCEL_URL = "http://127.0.0.1/cancel";
     private static final String INTENT = "sale";
     private static final String METHOD = "paypal";
 

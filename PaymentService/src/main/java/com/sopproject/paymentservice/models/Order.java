@@ -11,4 +11,5 @@ public class Order {
     private double price;
     private String currency;
     private String description;
+    private String orderItem;
 }
