@@ -3,14 +3,12 @@ package com.sopproject.paymentservice.controllers;
 import com.sopproject.paymentservice.models.PremiumUserEntity;
 import com.sopproject.paymentservice.models.PremiumUserRepository;
 import org.springframework.cglib.core.Local;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@CrossOrigin(origins = "", allowedHeaders = "")
 @RestController
 public class PremiumAccessController {
 
