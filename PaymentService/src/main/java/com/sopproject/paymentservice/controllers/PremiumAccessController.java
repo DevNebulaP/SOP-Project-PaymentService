@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@CrossOrigin(origins = "", allowedHeaders = "")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 public class PremiumAccessController {
 

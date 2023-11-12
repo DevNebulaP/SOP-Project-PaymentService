@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 @RestController
-@CrossOrigin(origins = "", allowedHeaders = "")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class PayPalPaymentController {
 
     @Autowired
